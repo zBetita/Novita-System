@@ -1,1 +1,1 @@
-{"id":"MSG_1755712722498_j6bf7bbxu","from":"quatro","to":"c0-c0","message":"svol","timestamp":"2025-08-20 17:58:42","decrypted":false}
+{"id":"MSG_1755712722498_j6bf7bbxu","from":"quatro","to":"c0-c0","message":"svol","timestamp":"2025-08-20 17:58:42","decrypted":true}
