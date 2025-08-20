@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOTIVA TERMINAL v1.0</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="terminal">
+        <div class="screen">
+            <div class="header">NOTIVA TERMINAL v1.0</div>
+            <div class="output" id="output">INITIALIZING...
+SYSTEM READY
+ACCESS RESTRICTED - LOGIN REQUIRED
+
+</div>
+            <div class="input-line">
+                <span class="prompt">></span>
+                <input type="text" id="input" autofocus>
+                <span class="cursor">_</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('input');
+        const output = document.getElementById('output');
+        
+        // Login credentials
+        const validUsers = {
+            'Quatro': '4444',
+            'C0-C0': '1234',
+        };
+        
+        let currentUser = '';
+        let isLoggedIn = false;
+        let mode = 'ready';
+        let isSelecting = false;
+        
+        function addOutput(text, className = '') {
+            const div = document.createElement('div');
+            div.textContent = text;
+            if (className) div.className = className;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function redirectToMainSystem() {
+            addOutput('LOADING MESSAGE SERVICE...', 'processing');
+            addOutput('', '');
+            
+            setTimeout(() => {
+                // Redirect to message service with username parameter
+                window.location.href = `main-system.html?user=${encodeURIComponent(currentUser)}`;
+            }, 2000);
+        }
+        
+        function processLoginCommand(command) {
+            const cmd = command.trim().toLowerCase();
+            
+            if (mode === 'login_username') {
+                if (validUsers.hasOwnProperty(cmd)) {
+                    currentUser = cmd;
+                    addOutput('PASSWORD:', 'login-form');
+                    return 'login_password';
+                } else {
+                    addOutput('INVALID USERNAME', 'error');
+                    addOutput('');
+                    addOutput('Please enter a valid username:', 'login-form');
+                    return 'login_username';
+                }
+            } else if (mode === 'login_password') {
+                if (validUsers[currentUser] === command.trim()) {
+                    addOutput('LOGIN SUCCESSFUL', 'success');
+                    addOutput('', '');
+                    isLoggedIn = true;
+                    redirectToMainSystem();
+                    return 'ready';
+                } else {
+                    addOutput('INVALID PASSWORD', 'error');
+                    addOutput('');
+                    addOutput('USERNAME:', 'login-form');
+                    currentUser = '';
+                    return 'login_username';
+                }
+            }
+        }
+        
+        function processMainCommand(command) {
+            const cmd = command.trim().toUpperCase();
+            
+            if (cmd === 'HELP') {
+                addOutput('Available Commands:');
+                addOutput('  STATUS   - Show system status');
+                addOutput('  LOGOUT   - Log out of the system');
+                addOutput('  HELP     - Show this list');
+                addOutput('  CLEAR    - Clear the screen');
+                addOutput('');
+                addOutput('> READY');
+            } else if (cmd === 'STATUS') {
+                addOutput(`User: ${currentUser}`, 'info');
+                addOutput('System Status: ONLINE', 'success');
+                addOutput('Access Level: AUTHORIZED', 'success');
+                addOutput('');
+                addOutput('> READY');
+            } else if (cmd === 'LOGOUT') {
+                addOutput('LOGGING OUT...', 'processing');
+                setTimeout(() => {
+                    isLoggedIn = false;
+                    currentUser = '';
+                    output.innerHTML = '';
+                    addOutput('LOGGED OUT SUCCESSFULLY', 'success');
+                    addOutput('');
+                    addOutput('Please enter your username:', 'login-form');
+                    mode = 'login_username';
+                }, 1000);
+            } else if (cmd === 'CLEAR') {
+                output.innerHTML = '';
+                addOutput('> READY');
+            } else {
+                addOutput('INVALID COMMAND', 'error');
+                addOutput('Type HELP for available commands');
+                addOutput('');
+                addOutput('> READY');
+            }
+            return 'ready';
+        }
+        
+        // Initialize login screen
+        addOutput('Please enter your username:', 'login-form');
+        addOutput('Available users: admin, user1, user2, alice, bob, guest', 'system');
+        addOutput('');
+        mode = 'login_username';
+        
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const command = input.value;
+                
+                // Don't show password in output
+                if (mode === 'login_password') {
+                    addOutput('> ' + '*'.repeat(command.length));
+                } else {
+                    addOutput('> ' + command);
+                }
+                
+                if (!isLoggedIn) {
+                    mode = processLoginCommand(command);
+                } else {
+                    if (mode === 'ready') {
+                        if (command.trim() === '') {
+                            addOutput('> READY');
+                        } else {
+                            mode = processMainCommand(command);
+                        }
+                    }
+                }
+                
+                input.value = '';
+            }
+        });
+        
+        // Focus management
+        document.addEventListener('mousedown', function(e) {
+            if (e.target === input) return;
+            isSelecting = true;
+        });
+        
+        document.addEventListener('mouseup', function() {
+            setTimeout(() => {
+                isSelecting = false;
+                if (window.getSelection().toString() === '') {
+                    input.focus();
+                }
+            }, 10);
+        });
+        
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                if (!isSelecting && window.getSelection().toString() === '') {
+                    input.focus();
+                }
+            }, 0);
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (e.target !== input && window.getSelection().toString() === '') {
+                setTimeout(() => input.focus(), 0);
+            }
+        });
+    </script>
+</body>
+</html>

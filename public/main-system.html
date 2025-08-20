@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOTIVA MESSAGE SERVICE v1.0</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="terminal">
+        <div class="screen">
+            <div class="header">NOTIVA MESSAGE SERVICE v1.0</div>
+            <div class="output" id="output">INITIALIZING...
+CONNECTING TO MESSAGE SERVER...
+SYSTEM READY
+
+</div>
+            <div class="input-line">
+                <span class="prompt">></span>
+                <input type="text" id="input" autofocus>
+                <span class="cursor">_</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('input');
+        const output = document.getElementById('output');
+        
+        // Get current user from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentUser = urlParams.get('user') || 'guest';
+        
+        // Message storage configuration
+        const GITHUB_USERNAME = 'zBetita'; // Your GitHub username
+        const GITHUB_REPO = 'Novita-System'; // Your repository name
+        const GITHUB_API_BASE = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}`;
+        
+        // WARNING: Never expose real tokens in frontend code!
+        // This is for testing only - move to backend for production
+        const API_TOKEN = 'My_token_should go here'; // Replace with your actual token
+        
+        let mode = 'ready';
+        let debugMode = true; // Enable debug logging
+        
+        function addOutput(text, className = '') {
+            const div = document.createElement('div');
+            div.textContent = text;
+            if (className) div.className = className;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function debugLog(message, data = null) {
+            if (debugMode) {
+                addOutput(`[DEBUG] ${message}`, 'debug');
+                if (data) {
+                    console.log('[DEBUG]', message, data);
+                }
+            }
+        }
+        
+        function atbashEncrypt(text) {
+            return text.split('').map(char => {
+                if (char >= 'A' && char <= 'Z') {
+                    return String.fromCharCode('Z'.charCodeAt(0) - (char.charCodeAt(0) - 'A'.charCodeAt(0)));
+                } else if (char >= 'a' && char <= 'z') {
+                    return String.fromCharCode('z'.charCodeAt(0) - (char.charCodeAt(0) - 'a'.charCodeAt(0)));
+                }
+                return char;
+            }).join('');
+        }
+        
+        function generateMessageId() {
+            return 'MSG_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        function getCurrentTimestamp() {
+            return new Date().toISOString().replace('T', ' ').substr(0, 19);
+        }
+        
+        // GitHub API functions with enhanced error handling
+        async function createOrUpdateFile(path, content, message) {
+            if (API_TOKEN === 'YOUR_GITHUB_TOKEN_HERE') {
+                addOutput('ERROR: GitHub token not configured', 'error');
+                return false;
+            }
+            
+            debugLog(`Attempting to create/update file: ${path}`);
+            
+            try {
+                let sha = null;
+                
+                // First try to get the file to see if it exists
+                try {
+                    const getResponse = await fetch(`${GITHUB_API_BASE}/contents/${path}`, {
+                        headers: {
+                            'Authorization': `token ${API_TOKEN}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    
+                    debugLog(`GET request status: ${getResponse.status}`);
+                    
+                    if (getResponse.ok) {
+                        const fileData = await getResponse.json();
+                        sha = fileData.sha;
+                        debugLog('File exists, got SHA for update');
+                    } else if (getResponse.status === 404) {
+                        debugLog('File does not exist, will create new');
+                    } else {
+                        const errorText = await getResponse.text();
+                        debugLog(`GET request failed: ${errorText}`);
+                    }
+                } catch (e) {
+                    debugLog(`Error getting file: ${e.message}`);
+                }
+                
+                // Create or update the file
+                const requestBody = {
+                    message: message,
+                    content: btoa(unescape(encodeURIComponent(content))), // Base64 encode
+                };
+                
+                if (sha) {
+                    requestBody.sha = sha;
+                }
+                
+                debugLog('Sending PUT request', requestBody);
+                
+                const response = await fetch(`${GITHUB_API_BASE}/contents/${path}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${API_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                debugLog(`PUT request status: ${response.status}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    debugLog('PUT request failed', errorData);
+                    addOutput(`GitHub API Error: ${errorData.message}`, 'error');
+                    return false;
+                }
+                
+                debugLog('File created/updated successfully');
+                return true;
+                
+            } catch (error) {
+                debugLog(`Network error: ${error.message}`);
+                addOutput(`Network Error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function readFile(path) {
+            if (API_TOKEN === 'YOUR_GITHUB_TOKEN_HERE') {
+                addOutput('ERROR: GitHub token not configured', 'error');
+                return null;
+            }
+            
+            try {
+                debugLog(`Reading file: ${path}`);
+                
+                const response = await fetch(`${GITHUB_API_BASE}/contents/${path}`, {
+                    headers: {
+                        'Authorization': `token ${API_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                debugLog(`Read request status: ${response.status}`);
+                
+                if (response.ok) {
+                    const fileData = await response.json();
+                    const content = decodeURIComponent(escape(atob(fileData.content)));
+                    debugLog('File read successfully');
+                    return content;
+                } else if (response.status === 404) {
+                    debugLog('File not found (404)');
+                    return null;
+                } else {
+                    const errorData = await response.json();
+                    debugLog('Read request failed', errorData);
+                    return null;
+                }
+            } catch (error) {
+                debugLog(`Error reading file: ${error.message}`);
+                return null;
+            }
+        }
+        
+        async function sendMessage(recipient, message) {
+            const messageId = generateMessageId();
+            const timestamp = getCurrentTimestamp();
+            const encryptedMessage = atbashEncrypt(message);
+            
+            debugLog(`Sending message from ${currentUser} to ${recipient}`);
+            
+            // Create message object
+            const messageData = {
+                id: messageId,
+                from: currentUser,
+                to: recipient,
+                message: encryptedMessage,
+                timestamp: timestamp,
+                decrypted: false
+            };
+            
+            // Store message in recipient's inbox
+            const inboxPath = `messages/${recipient}/inbox.txt`;
+            let existingMessages = await readFile(inboxPath) || '';
+            existingMessages += JSON.stringify(messageData) + '\n';
+            
+            const success = await createOrUpdateFile(
+                inboxPath,
+                existingMessages,
+                `New message for ${recipient} from ${currentUser}`
+            );
+            
+            if (success) {
+                // Log the message
+                const logPath = `logs/${recipient}/messages.log`;
+                let logContent = await readFile(logPath) || '';
+                logContent += `[${timestamp}] MESSAGE_SENT: ${currentUser} -> ${recipient} (ID: ${messageId})\n`;
+                
+                await createOrUpdateFile(
+                    logPath,
+                    logContent,
+                    `Log entry for message ${messageId}`
+                );
+                
+                addOutput(`MESSAGE SENT SUCCESSFULLY`, 'success');
+                addOutput(`MESSAGE ID: ${messageId}`, 'system');
+                addOutput(`TO: ${recipient}`, 'system');
+                addOutput(`ENCRYPTED: ${encryptedMessage}`, 'encrypted');
+            } else {
+                addOutput('ERROR: Failed to send message', 'error');
+            }
+            
+            return success;
+        }
+        
+        async function checkMessages() {
+            const inboxPath = `messages/${currentUser}/inbox.txt`;
+            const messages = await readFile(inboxPath);
+            
+            if (!messages) {
+                addOutput('NO MESSAGES FOUND', 'system');
+                return;
+            }
+            
+            const messageLines = messages.trim().split('\n').filter(line => line);
+            const unreadMessages = [];
+            
+            messageLines.forEach(line => {
+                try {
+                    const msg = JSON.parse(line);
+                    if (!msg.decrypted) {
+                        unreadMessages.push(msg);
+                    }
+                } catch (e) {
+                    debugLog(`Malformed message line: ${line}`);
+                }
+            });
+            
+            if (unreadMessages.length === 0) {
+                addOutput('NO NEW MESSAGES', 'system');
+                return;
+            }
+            
+            addOutput(`YOU HAVE ${unreadMessages.length} NEW MESSAGE(S):`, 'success');
+            addOutput('');
+            
+            unreadMessages.forEach(msg => {
+                addOutput(`ID: ${msg.id}`, 'system');
+                addOutput(`FROM: ${msg.from}`, 'system');
+                addOutput(`RECEIVED: ${msg.timestamp}`, 'system');
+                addOutput(`ENCRYPTED: ${msg.message}`, 'encrypted');
+                addOutput('---');
+            });
+            
+            addOutput('USE "DECRYPT [ID]" TO READ MESSAGES', 'system');
+        }
+        
+        async function decryptMessage(messageId) {
+            const inboxPath = `messages/${currentUser}/inbox.txt`;
+            const messages = await readFile(inboxPath);
+            
+            if (!messages) {
+                addOutput('NO MESSAGES FOUND', 'error');
+                return;
+            }
+            
+            const messageLines = messages.trim().split('\n').filter(line => line);
+            let targetMessage = null;
+            let updatedMessages = [];
+            
+            messageLines.forEach(line => {
+                try {
+                    const msg = JSON.parse(line);
+                    if (msg.id === messageId) {
+                        targetMessage = msg;
+                        msg.decrypted = true; // Mark as read
+                    }
+                    updatedMessages.push(JSON.stringify(msg));
+                } catch (e) {
+                    updatedMessages.push(line); // Keep malformed lines as-is
+                }
+            });
+            
+            if (!targetMessage) {
+                addOutput('MESSAGE NOT FOUND', 'error');
+                return;
+            }
+            
+            // Update inbox to mark message as read
+            await createOrUpdateFile(
+                inboxPath,
+                updatedMessages.join('\n') + '\n',
+                `Mark message ${messageId} as read`
+            );
+            
+            // Decrypt and display message
+            const decryptedMessage = atbashEncrypt(targetMessage.message);
+            
+            addOutput('MESSAGE DECRYPTED:', 'success');
+            addOutput('');
+            addOutput(`${targetMessage.from}: ${decryptedMessage}`, 'message-content');
+            addOutput(`Sent: ${targetMessage.timestamp}`, 'system');
+            
+            // Log the decryption
+            const logPath = `logs/${currentUser}/messages.log`;
+            let logContent = await readFile(logPath) || '';
+            logContent += `[${getCurrentTimestamp()}] MESSAGE_READ: ${targetMessage.from} -> ${currentUser} (ID: ${messageId})\n`;
+            
+            await createOrUpdateFile(
+                logPath,
+                logContent,
+                `Log entry for reading message ${messageId}`
+            );
+        }
+        
+        function processCommand(command) {
+            const cmd = command.trim().toUpperCase();
+            const parts = command.trim().split(' ');
+            
+            if (cmd === 'HELP') {
+                addOutput('SEND [user] [message] - Send encrypted message to user');
+                addOutput('MESSAGES                - Check your messages');
+                addOutput('DECRYPT [ID]            - Decrypt message by ID');
+                addOutput('STATUS                  - Show system status');
+                addOutput('DEBUG [ON/OFF]          - Toggle debug mode');
+                addOutput('TEST                    - Test GitHub connection');
+                addOutput('HELP                    - Show this list');
+                addOutput('CLEAR                   - Clear screen');
+                addOutput('LOGOUT                  - Return to login');
+                addOutput('');
+                addOutput('> READY');
+            } else if (cmd === 'STATUS') {
+                addOutput('SYSTEM STATUS: OPERATIONAL', 'success');
+                addOutput('NOVITA: FED','success');
+                addOutput('NOVITA: CARRESSED','success');
+                addOutput('NOVITA EYES: NOT OPERATIONAL','error');
+                addOutput('NOVITA EARS: OPERATIONAL','success');
+                addOutput('NOVITA MOUTH: OPERATIONAL','success');
+                addOutput(`CURRENT USER: ${currentUser}`, 'system');
+                addOutput('CIPHER: ATBASH', 'system');
+                addOutput('MESSAGE SERVICE: ACTIVE', 'success');
+                addOutput('SERVER: GITHUB', 'system');
+                addOutput(`DEBUG MODE: ${debugMode ? 'ON' : 'OFF'}`, 'system');
+                addOutput('');
+                addOutput('> READY');
+            } else if (cmd === 'TEST') {
+                addOutput('TESTING GITHUB CONNECTION...', 'processing');
+                setTimeout(async () => {
+                    const testPath = `test/connection_test_${Date.now()}.txt`;
+                    const testContent = 'Connection test successful';
+                    const success = await createOrUpdateFile(testPath, testContent, 'Connection test');
+                    if (success) {
+                        addOutput('GITHUB CONNECTION: SUCCESS', 'success');
+                    } else {
+                        addOutput('GITHUB CONNECTION: FAILED', 'error');
+                    }
+                    addOutput('');
+                    addOutput('> READY');
+                }, 1000);
+            } else if (cmd.startsWith('DEBUG ')) {
+                const setting = parts[1]?.toUpperCase();
+                if (setting === 'ON') {
+                    debugMode = true;
+                    addOutput('DEBUG MODE: ON', 'success');
+                } else if (setting === 'OFF') {
+                    debugMode = false;
+                    addOutput('DEBUG MODE: OFF', 'success');
+                } else {
+                    addOutput('USAGE: DEBUG [ON/OFF]', 'error');
+                }
+                addOutput('');
+                addOutput('> READY');
+            } else if (cmd === 'MESSAGES') {
+                addOutput('CHECKING MESSAGES...', 'processing');
+                setTimeout(() => {
+                    checkMessages().then(() => {
+                        addOutput('');
+                        addOutput('> READY');
+                    });
+                }, 1000);
+            } else if (cmd.startsWith('SEND ')) {
+                if (parts.length < 3) {
+                    addOutput('USAGE: SEND [username] [message]', 'error');
+                    addOutput('');
+                    addOutput('> READY');
+                    return 'ready';
+                }
+                
+                const recipient = parts[1];
+                const message = parts.slice(2).join(' ');
+                
+                addOutput('SENDING MESSAGE...', 'processing');
+                setTimeout(() => {
+                    sendMessage(recipient, message).then(() => {
+                        addOutput('');
+                        addOutput('> READY');
+                    });
+                }, 1000);
+                
+            } else if (cmd.startsWith('DECRYPT ')) {
+                if (parts.length !== 2) {
+                    addOutput('USAGE: DECRYPT [message_id]', 'error');
+                    addOutput('');
+                    addOutput('> READY');
+                    return 'ready';
+                }
+                
+                const messageId = parts[1];
+                addOutput('DECRYPTING MESSAGE...', 'processing');
+                setTimeout(() => {
+                    decryptMessage(messageId).then(() => {
+                        addOutput('');
+                        addOutput('> READY');
+                    });
+                }, 1000);
+                
+            } else if (cmd === 'CLEAR') {
+                output.innerHTML = '';
+                addOutput('> READY');
+            } else if (cmd === 'LOGOUT') {
+                addOutput('LOGGING OUT...', 'processing');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } else {
+                addOutput('INVALID COMMAND', 'error');
+                addOutput('Type HELP for available commands');
+                addOutput('');
+                addOutput('> READY');
+            }
+            return 'ready';
+        }
+        
+        // Initialize
+        addOutput(`LOGGED IN AS: ${currentUser}`, 'success');
+        addOutput('Enhanced debug mode available');
+        addOutput('Type HELP for available commands');
+        addOutput('Type TEST to check GitHub connection');
+        addOutput('');
+        
+        // Check if token is configured
+        if (API_TOKEN === 'YOUR_GITHUB_TOKEN_HERE') {
+            addOutput('WARNING: GitHub token not configured!', 'error');
+            addOutput('Please update API_TOKEN in the code', 'error');
+            addOutput('');
+        }
+        
+        addOutput('> READY');
+        
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const command = input.value;
+                addOutput('> ' + command);
+                
+                if (command.trim() === '') {
+                    addOutput('> READY');
+                } else {
+                    mode = processCommand(command);
+                }
+                
+                input.value = '';
+            }
+        });
+        
+        // Focus management
+        let isSelecting = false;
+        
+        document.addEventListener('mousedown', function(e) {
+            if (e.target === input) return;
+            isSelecting = true;
+        });
+        
+        document.addEventListener('mouseup', function() {
+            setTimeout(() => {
+                isSelecting = false;
+                if (window.getSelection().toString() === '') {
+                    input.focus();
+                }
+            }, 10);
+        });
+        
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                if (!isSelecting && window.getSelection().toString() === '') {
+                    input.focus();
+                }
+            }, 0);
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (e.target !== input && window.getSelection().toString() === '') {
+                setTimeout(() => input.focus(), 0);
+            }
+        });
+    </script>
+</body>
+</html>

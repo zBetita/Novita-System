@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    color: #46ebeb;
+    font-family: 'Courier Prime', monospace;
+    font-size: 16px;
+    line-height: 1.2;
+    overflow: hidden;
+}
+
+.terminal {
+    width: 100vw;
+    height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    background: 
+        radial-gradient(ellipse at center, transparent 0%, rgba(0,255,0,0.05) 100%),
+        linear-gradient(0deg, rgba(0,255,0,0.03) 50%, transparent 50%);
+    background-size: 100% 100%, 100% 4px;
+}
+
+.screen {
+    width: 100%;
+    height: 100%;
+    border: 2px solid #fb0a26;
+    padding: 15px;
+    box-sizing: border-box;
+    background-color: rgba(25,47,34,0.8);
+    overflow-y: auto;
+    position: relative;
+}
+
+.output {
+    white-space: pre-wrap;
+    margin-bottom: 5px;
+}
+
+.input-line {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.prompt {
+    color: #46ebeb;
+    margin-right: 5px;
+}
+
+#input {
+    background: transparent;
+    border: none;
+    color: #46ebeb;
+    font-family: 'Courier Prime', monospace;
+    font-size: 16px;
+    outline: none;
+    flex: 1;
+}
+
+.cursor {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { 
+        opacity: 1; 
+    }
+    51%, 100% { 
+        opacity: 0; 
+    }
+}
+
+.processing {
+    color: #ffff00;
+}
+
+.error {
+    color: #ff0000;
+}
+
+.success {
+    color: #00ff00;
+}
+
+.message-header {
+    color: #ff9900;
+}
+
+.message-content {
+    color: #ffffff;
+    margin-left: 20px;
+}
+
+.encrypted {
+    color: #cc00cc;
+}
+
+.system {
+    color: #00ccff;
+}
+
+.header {
+    color: #00ffff;
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #fb0a26;
+    padding-bottom: 10px;
+}
+
+.status-bar {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    color: #46ebeb;
+    background: rgba(0,0,0,0.8);
+    padding: 5px 10px;
+    border: 1px solid #fb0a26;
+}
+
+.debug { color: #ffa500; }
