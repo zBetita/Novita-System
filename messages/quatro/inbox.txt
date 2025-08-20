@@ -1,2 +1,2 @@
 {"id":"MSG_1755713056947_vry9q20b0","from":"quatro","to":"quatro","message":"loz","timestamp":"2025-08-20 18:04:16","decrypted":true}
-{"id":"MSG_1755713613737_591241q8l","from":"c0-c0","to":"quatro","message":"sloz, ufmxrlmz?","timestamp":"2025-08-20 18:13:33","decrypted":false}
+{"id":"MSG_1755713613737_591241q8l","from":"c0-c0","to":"quatro","message":"sloz, ufmxrlmz?","timestamp":"2025-08-20 18:13:33","decrypted":true}
