@@ -29,8 +29,8 @@ ACCESS RESTRICTED - LOGIN REQUIRED
         
         // Login credentials
         const validUsers = {
-            'Quatro': '4444',
-            'C0-C0': '1234',
+            'cuatro': '4444',
+            'c0-c0': '1234',
         };
         
         let currentUser = '';
@@ -129,7 +129,7 @@ ACCESS RESTRICTED - LOGIN REQUIRED
         
         // Initialize login screen
         addOutput('Please enter your username:', 'login-form');
-        addOutput('Available users: admin, user1, user2, alice, bob, guest', 'system');
+        addOutput('Available users: quatro, c0-c0', 'system');
         addOutput('');
         mode = 'login_username';
         
@@ -190,4 +190,5 @@ ACCESS RESTRICTED - LOGIN REQUIRED
         });
     </script>
 </body>
+
 </html>
