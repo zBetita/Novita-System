@@ -1,4 +1,4 @@
 {"id":"MSG_1755713056947_vry9q20b0","from":"quatro","to":"quatro","message":"loz","timestamp":"2025-08-20 18:04:16","decrypted":true}
 {"id":"MSG_1755713613737_591241q8l","from":"c0-c0","to":"quatro","message":"sloz, ufmxrlmz?","timestamp":"2025-08-20 18:13:33","decrypted":true}
 {"id":"MSG_1755713801282_f862s2tmb","from":"c0-c0","to":"quatro","message":"vcxvovmgv, szyiá jfv zñzwri z Arttb?","timestamp":"2025-08-20 18:16:41","decrypted":true}
-{"id":"MSG_1755717041899_4e4j36drq","from":"c0-c0","to":"quatro","message":"loz nfmwl","timestamp":"2025-08-20 19:10:41","decrypted":false}
+{"id":"MSG_1755717041899_4e4j36drq","from":"c0-c0","to":"quatro","message":"loz nfmwl","timestamp":"2025-08-20 19:10:41","decrypted":true}
