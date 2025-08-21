@@ -6,4 +6,4 @@
 {"id":"MSG_1755742813311_ju2vy2vrk","from":"c0-c0","to":"quatro","message":"jfrvmvh hviám?","timestamp":"2025-08-21 02:20:13","decrypted":true}
 {"id":"MSG_1755791619646_xbadf6y2z","from":"c0-c0","to":"quatro","message":"loz xszezovh","timestamp":"2025-08-21 15:53:39","decrypted":true}
 {"id":"MSG_1755794923740_qfxwqam8f","from":"c0-c0","to":"quatro","message":"lozzzzzz","timestamp":"2025-08-21 16:48:43","decrypted":true}
-{"id":"MSG_1755802640341_e3xb1p9l5","from":"c0-c0","to":"quatro","message":"loz nfmwl, nvmhzqv wv kifvyz","timestamp":"2025-08-21 18:57:20","decrypted":false}
+{"id":"MSG_1755802640341_e3xb1p9l5","from":"c0-c0","to":"quatro","message":"loz nfmwl, nvmhzqv wv kifvyz","timestamp":"2025-08-21 18:57:20","decrypted":true}
